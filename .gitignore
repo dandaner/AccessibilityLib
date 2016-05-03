@@ -31,12 +31,13 @@ proguard/
 # Android Studio captures folder
 captures/
 
+# Android Studio files
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
+
+# jni obj files
+jni/*/obj/*
+
+# MAC auto-gen files
 .DS_Store
-/build
-/captures
 
