@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AccessibilityLib</string>
+    <string name="tips">正在处理：%1$s</string>
 </resources>

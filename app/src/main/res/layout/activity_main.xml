@@ -29,4 +29,10 @@
         android:layout_height="wrap_content"
         android:text="停止加速强停功能" />
 
+    <Button
+        android:id="@+id/auto_install"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="自动安装" />
+
 </LinearLayout>

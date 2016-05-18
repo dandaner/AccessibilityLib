@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.example.accessibility.BuildConfig;
 import com.example.accessibility.MyApp;
@@ -71,17 +70,10 @@ public class ServiceProvider extends ContentProvider {
     @Nullable
     @Override
     public Bundle call(String method, String arg, Bundle extras) {
-        if (TextUtils.isEmpty(arg)) {
-            return null;
-        }
-        if (MyServiceManger.ACC_SERVICE.equals(arg)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                Bundle result = new Bundle();
-                result.putBinder(KEY_SERVICE, MyApp.sService);
-                return result;
-            }
-        } else {
-            // TODO
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            Bundle result = new Bundle();
+            result.putBinder(KEY_SERVICE, MyApp.sService);
+            return result;
         }
         return null;
     }

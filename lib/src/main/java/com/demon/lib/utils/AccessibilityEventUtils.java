@@ -16,7 +16,14 @@
 
 package com.demon.lib.utils;
 
+import android.annotation.TargetApi;
+import android.os.Build;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+
+import java.util.List;
 
 /**
  * This class contains utility methods.
@@ -39,4 +46,36 @@ public class AccessibilityEventUtils {
         return event != null && (event.getEventType() & typeMask) != 0;
     }
 
+    /**
+     * 根据传入的ids,以及文案，返回节点信息，一旦找到，就返回，不在继续查找
+     */
+    @Nullable
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static List<AccessibilityNodeInfo> getAccessibilityNodeInfos(AccessibilityEvent event, String[] ids, String[] texts) {
+        List<AccessibilityNodeInfo> result = null;
+        AccessibilityNodeInfo source = event.getSource();
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            if (ids != null && ids.length > 0) {
+                for (String id : ids) {
+                    if (!TextUtils.isEmpty(id)) {
+                        result = source.findAccessibilityNodeInfosByViewId(id);
+                        if (result != null && result.size() > 0) {
+                            return result;
+                        }
+                    }
+                }
+            }
+        }
+        if (texts != null && texts.length > 0) {
+            for (String text : texts) {
+                if (!TextUtils.isEmpty(text)) {
+                    result = source.findAccessibilityNodeInfosByText(text);
+                    if (result != null && result.size() > 0) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return result;
+    }
 }

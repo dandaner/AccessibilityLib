@@ -21,6 +21,8 @@ public class MyAccessibilityService extends AccessibilityService {
     private AccessibilityServiceManager mManager;
     private CallStateMonitor mCallStateMonitor;
 
+    private int mLastWindowId = -1;
+
     @Override
     public void onCreate() {
         if (DEBUG) {
@@ -90,6 +92,7 @@ public class MyAccessibilityService extends AccessibilityService {
         if (mCallStateMonitor != null) {
             mCallStateMonitor.stopMonitor();
         }
+        mManager.onServiceDisConnected();
         super.onDestroy();
     }
 
@@ -97,6 +100,11 @@ public class MyAccessibilityService extends AccessibilityService {
      * 源头设置event拦截规则，可以监听电话状态，屏幕状态，手机电量等等，主要由业务决定
      */
     private boolean dropEventIfNeeded(AccessibilityEvent event) {
+        int windowId = event.getWindowId();
+        // 同一个窗口事件，对我们来说是无用的
+        if (windowId < 0 || windowId == mLastWindowId) {
+            return true;
+        }
         // 无法获取数据源，无用的数据
         if (event.getSource() == null) {
             return true;
@@ -105,6 +113,7 @@ public class MyAccessibilityService extends AccessibilityService {
         if (mCallStateMonitor != null && mCallStateMonitor.isPhoneActive()) {
             return true;
         }
+        mLastWindowId = windowId;
         return false;
     }
 }

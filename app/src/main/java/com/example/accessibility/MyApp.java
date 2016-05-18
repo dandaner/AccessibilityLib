@@ -2,7 +2,7 @@ package com.example.accessibility;
 
 import android.app.Application;
 
-import com.example.accessibility.acc.AccManagerService;
+import com.example.accessibility.base.AccessibilityService;
 
 /**
  * author: demon.zhang
@@ -10,11 +10,11 @@ import com.example.accessibility.acc.AccManagerService;
  */
 public class MyApp extends Application {
 
-    public static AccManagerService sService;
+    public static AccessibilityService sService;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        sService = new AccManagerService(this);
+        sService = new AccessibilityService(this);
     }
 }

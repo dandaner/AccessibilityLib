@@ -8,7 +8,6 @@ import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,13 +18,14 @@ import java.util.List;
  */
 public class AccessibilityServiceManager {
 
-    private ArrayList<BaseEventHandler> mHandlers;
-
+    /**
+     * 由于系统限制，同一时刻，只能有一个处理器工作，无法处理并发情况
+     */
+    private BaseEventHandler mWorkHandler;
     private AccessibilityService mService;
     private static AccessibilityServiceManager sInstance;
 
     private AccessibilityServiceManager() {
-        this.mHandlers = new ArrayList<>();
     }
 
     public static AccessibilityServiceManager getInstance() {
@@ -39,12 +39,30 @@ public class AccessibilityServiceManager {
         return sInstance;
     }
 
-    public void registerEventHandler(BaseEventHandler handler) {
-        if (!mHandlers.contains(handler)) {
-            addTarget(handler.getTarget());
-            mHandlers.add(handler);
-            handler.onStartWork();
+    public boolean isWorking() {
+        return mWorkHandler != null;
+    }
+
+    public void start(BaseEventHandler handler) {
+        if (handler == null) {
+            return;
         }
+        if (isWorking()) {
+            return;
+        }
+        this.mWorkHandler = handler;
+        addTarget(handler.getTarget());
+        handler.onStartWork();
+    }
+
+    public void stop() {
+        if (!isWorking()) {
+            return;
+        }
+        removeTarget(mWorkHandler.getTarget());
+        this.mWorkHandler.onStopWork();
+        this.mWorkHandler = null;
+
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -87,16 +105,7 @@ public class AccessibilityServiceManager {
      *
      * 基于以上两点，暂时没有提供移除功能的具体实现。
      */
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void removeTarget(AccessibilityServiceInfo target) {
-    }
-
-    public void unregisterEventHandler(BaseEventHandler handler) {
-        if (mHandlers.contains(handler)) {
-            removeTarget(handler.getTarget());
-            mHandlers.remove(handler);
-            handler.onStopWork();
-        }
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -114,11 +123,8 @@ public class AccessibilityServiceManager {
     }
 
     public void onAccessibilityEvent(final AccessibilityEvent event) {
-        if (mHandlers.isEmpty()) {
-            return;
-        }
-        for (BaseEventHandler handler : mHandlers) {
-            handler.onAccessibilityEvent(event);
+        if (mWorkHandler != null) {
+            mWorkHandler.onAccessibilityEvent(event);
         }
     }
 

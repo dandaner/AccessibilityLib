@@ -1,4 +1,4 @@
-package com.example.accessibility.acc;
+package com.example.accessibility.base;
 
 import android.app.Activity;
 import android.content.Intent;

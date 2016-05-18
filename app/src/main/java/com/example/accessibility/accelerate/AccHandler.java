@@ -1,7 +1,10 @@
-package com.example.accessibility.acc;
+package com.example.accessibility.accelerate;
 
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.demon.lib.base.BaseEventHandler;
@@ -17,8 +20,8 @@ import java.util.List;
  */
 public class AccHandler extends BaseEventHandler {
 
-    public AccHandler(Context context) {
-        super(context);
+    public AccHandler(IEventHandlerStateListener listener) {
+        super(listener);
     }
 
     @Override
@@ -37,5 +40,13 @@ public class AccHandler extends BaseEventHandler {
         target.packageNames = new String[]{"com.android.settings"};
         target.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
         return target;
+    }
+
+    @Nullable
+    @Override
+    public Intent getTargetIntent(String target) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.fromParts("package", target, null));
+        return intent;
     }
 }
