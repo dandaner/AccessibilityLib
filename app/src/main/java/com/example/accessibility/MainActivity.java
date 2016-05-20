@@ -17,7 +17,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.demon.lib.base.AccessibilityServiceManager;
 import com.demon.lib.utils.LogHelper;
 import com.example.accessibility.base.AccessibilityCallback;
 import com.example.accessibility.base.AccessibilityHelper;
@@ -54,6 +53,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
                 case MSG_AFTER:
                     break;
+                case MSG_CONNECT:
+                    Toast.makeText(MainActivity.this, "辅助服务功能开启成功", Toast.LENGTH_SHORT).show();
+                    break;
+                case MSG_DISCONNECT:
+                    Toast.makeText(MainActivity.this, "辅助服务功能关闭", Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
     };
@@ -62,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int MSG_STOP = 2;
     private static final int MSG_BEFORE = 3;
     private static final int MSG_AFTER = 4;
+    private static final int MSG_CONNECT = 5;
+    private static final int MSG_DISCONNECT = 6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,13 +82,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.start).setOnClickListener(this);
         findViewById(R.id.stop).setOnClickListener(this);
         findViewById(R.id.auto_install).setOnClickListener(this);
+        findViewById(R.id.auto_uninstall).setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.open:
-                AccessibilityHelper.openAccessibilityService(this);
+                open();
                 break;
             case R.id.start:
                 startAcc();
@@ -91,13 +99,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.auto_install:
                 autoInstall();
                 break;
+            case R.id.auto_uninstall:
+                autoUninstall();
+                break;
             default:
                 break;
         }
     }
 
+    private void open() {
+        AccessibilityHelper.openAccessibilityService(this, new AccessibilityCallback() {
+            @Override
+            public void onStart() throws RemoteException {
+                mHandler.sendEmptyMessage(MSG_CONNECT);
+            }
+
+            @Override
+            public void before(String result) throws RemoteException {
+
+            }
+
+            @Override
+            public void after(String result) throws RemoteException {
+
+            }
+
+            @Override
+            public void onStop() throws RemoteException {
+                mHandler.sendEmptyMessage(MSG_DISCONNECT);
+            }
+        });
+    }
+
+    private void autoUninstall() {
+        if (!AccessibilityHelper.isAccessibilityEnable(this)) {
+            Toast.makeText(this, "吊炸天服务尚未开启，请点击打开辅助功能按钮！！", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinkedList<String> pkgNames = new LinkedList<>();
+        // need to check intent avaiable
+//        pkgNames.add("com.qihoo360.mobilesafe");
+        pkgNames.add("fm.qingting.qtradio");
+        pkgNames.add("yinyu.toutiiao");
+        AccessibilityHelper.start(this, AccessibilityHelper.TYPE_AUTO_UNINSTALL, pkgNames, null);
+    }
+
     private void startAcc() {
-        if (!AccessibilityServiceManager.isAccessibilityEnable(this)) {
+        if (!AccessibilityHelper.isAccessibilityEnable(this)) {
             Toast.makeText(this, "吊炸天服务尚未开启，请点击打开辅助功能按钮！！", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -106,43 +154,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        pkgNames.add("com.qihoo360.mobilesafe");
         pkgNames.add("com.achievo.vipshop");
         pkgNames.add("cn.j.hers");
-        AccessibilityHelper.start(this, AccessibilityHelper.TYPE_ACC, pkgNames, new AccessibilityCallback() {
-            @Override
-            public void onStart() throws RemoteException {
-                if (DEBUG) {
-                    LogHelper.d(TAG, "acc service onStart");
-                }
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_START));
-            }
-
-            @Override
-            public void before(String result) throws RemoteException {
-                if (DEBUG) {
-                    LogHelper.d(TAG, "acc service before : " + result);
-                }
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_BEFORE, result));
-            }
-
-            @Override
-            public void after(String result) throws RemoteException {
-                if (DEBUG) {
-                    LogHelper.d(TAG, "acc service after : " + result);
-                }
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_AFTER));
-            }
-
-            @Override
-            public void onStop() throws RemoteException {
-                if (DEBUG) {
-                    LogHelper.d(TAG, "acc service onStop");
-                }
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_STOP));
-            }
-        });
+        AccessibilityHelper.start(this, AccessibilityHelper.TYPE_ACC, pkgNames, new MyAccessibilityCallback());
     }
 
     private void autoInstall() {
-        if (!AccessibilityServiceManager.isAccessibilityEnable(this)) {
+        if (!AccessibilityHelper.isAccessibilityEnable(this)) {
             Toast.makeText(this, "蛋碎服务尚未开启，请点击打开辅助功能按钮！！", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -151,39 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-yinyu.toutiiao.apk");
         paths.add("/sdcard/AndroidOptimizer/apkdownloader/predl-com.baidu.browser.apps.pak");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_AUTO_INSTALL,
-                paths, new AccessibilityCallback() {
-                    @Override
-                    public void onStart() throws RemoteException {
-                        if (DEBUG) {
-                            LogHelper.d(TAG, "auto install service onStart");
-                        }
-                        mHandler.sendMessage(mHandler.obtainMessage(MSG_START));
-                    }
-
-                    @Override
-                    public void before(String result) throws RemoteException {
-                        if (DEBUG) {
-                            LogHelper.d(TAG, "auto install before : " + result);
-                        }
-                        mHandler.sendMessage(mHandler.obtainMessage(MSG_BEFORE, result));
-                    }
-
-                    @Override
-                    public void after(String result) throws RemoteException {
-                        if (DEBUG) {
-                            LogHelper.d(TAG, "auto install after : " + result);
-                        }
-                        mHandler.sendMessage(mHandler.obtainMessage(MSG_AFTER));
-                    }
-
-                    @Override
-                    public void onStop() throws RemoteException {
-                        if (DEBUG) {
-                            LogHelper.d(TAG, "auto install service onStop");
-                        }
-                        mHandler.sendMessage(mHandler.obtainMessage(MSG_STOP));
-                    }
-                });
+                paths, new MyAccessibilityCallback());
     }
 
 
@@ -255,6 +239,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void showTips(String msg) {
         if (mTips != null) {
             mTips.setText(getString(R.string.tips, msg));
+        }
+    }
+
+    private class MyAccessibilityCallback extends AccessibilityCallback {
+
+        @Override
+        public void onStart() throws RemoteException {
+            if (DEBUG) {
+                LogHelper.d(TAG, "Client callback service onStart");
+            }
+            mHandler.sendMessage(mHandler.obtainMessage(MSG_START));
+        }
+
+        @Override
+        public void before(String result) throws RemoteException {
+            if (DEBUG) {
+                LogHelper.d(TAG, "Client callback service before : " + result);
+            }
+            mHandler.sendMessage(mHandler.obtainMessage(MSG_BEFORE, result));
+        }
+
+        @Override
+        public void after(String result) throws RemoteException {
+            if (DEBUG) {
+                LogHelper.d(TAG, "Client callback service after : " + result);
+            }
+            mHandler.sendMessage(mHandler.obtainMessage(MSG_AFTER));
+        }
+
+        @Override
+        public void onStop() throws RemoteException {
+            if (DEBUG) {
+                LogHelper.d(TAG, "Client callback service onStop");
+            }
+            mHandler.sendMessage(mHandler.obtainMessage(MSG_STOP));
         }
     }
 }

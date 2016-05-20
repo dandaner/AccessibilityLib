@@ -2,17 +2,16 @@ package com.example.accessibility.base;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
-import android.provider.Settings;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import com.demon.lib.BuildConfig;
+import com.demon.lib.base.AccessibilityServiceManager;
 import com.demon.lib.utils.LogHelper;
 import com.example.accessibility.accelerate.IAccessibility;
 import com.example.accessibility.accelerate.IAccessibilityCallback;
@@ -53,6 +52,21 @@ public class AccessibilityHelper {
     }
 
     /**
+     * 开启辅助功能
+     */
+    public static void openAccessibilityService(Context context, IAccessibilityCallback callback) {
+        IBinder binder = getAccessibilityService(context);
+        if (binder != null && binder.isBinderAlive()) {
+            IAccessibility service = IAccessibility.Stub.asInterface(binder);
+            try {
+                service.open(callback);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * 启动指定类型的辅助功能
      */
     public static void start(@NonNull Context context, @AccessibilityType int type,
@@ -87,6 +101,22 @@ public class AccessibilityHelper {
     }
 
     /**
+     * 判断当前辅助服务是否可用
+     */
+    public static boolean isAccessibilityEnable(Context ctx) {
+        return AccessibilityServiceManager.isAccessibilityEnable(ctx);
+    }
+
+    /**
+     * 判断当前系统是否支持辅助服务功能
+     * 尽管Android在ICE_CREAM_SANDWICH中已经提供辅助服务，但是它
+     * 的功能只有在JELLY_BEAN才能满足我们的需求
+     */
+    public static boolean isAccessibilitySupport() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
+    }
+
+    /**
      * 这里简单通过ContentProvider实现一个远端binder service管理类。
      * 由于bundle#getBinder()方法在JELLY_BEAN_MR2之后才提供，所以只能在4.3
      * 及其以上的android 设备上生效，这里仅仅是为了尝试使用ContentProvider来提供
@@ -102,12 +132,5 @@ public class AccessibilityHelper {
             }
         }
         return null;
-    }
-
-    public static void openAccessibilityService(Context context) {
-        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        context.startActivity(intent);
     }
 }

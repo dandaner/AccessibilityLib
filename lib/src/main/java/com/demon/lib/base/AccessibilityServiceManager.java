@@ -25,6 +25,14 @@ public class AccessibilityServiceManager {
     private AccessibilityService mService;
     private static AccessibilityServiceManager sInstance;
 
+    private IAccessibilityServiceStateListener mStateListener;
+
+    public interface IAccessibilityServiceStateListener {
+        void onServiceConnected();
+
+        void onServiceDisConnected();
+    }
+
     private AccessibilityServiceManager() {
     }
 
@@ -120,6 +128,16 @@ public class AccessibilityServiceManager {
             serviceInfo.packageNames = new String[]{""};
             service.setServiceInfo(serviceInfo);
         }
+
+        if (mStateListener != null) {
+            mStateListener.onServiceConnected();
+        }
+    }
+
+    public void onServiceDisConnected() {
+        if (mStateListener != null) {
+            mStateListener.onServiceDisConnected();
+        }
     }
 
     public void onAccessibilityEvent(final AccessibilityEvent event) {
@@ -128,7 +146,8 @@ public class AccessibilityServiceManager {
         }
     }
 
-    public void onServiceDisConnected() {
+    public void setStateListener(IAccessibilityServiceStateListener listener) {
+        this.mStateListener = listener;
     }
 
     /**

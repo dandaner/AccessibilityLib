@@ -1,8 +1,10 @@
 package com.example.accessibility.base;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Process;
 import android.os.RemoteException;
+import android.provider.Settings;
 
 import com.demon.lib.BuildConfig;
 import com.demon.lib.base.AccessibilityServiceManager;
@@ -12,6 +14,7 @@ import com.example.accessibility.accelerate.AccHandler;
 import com.example.accessibility.accelerate.IAccessibility;
 import com.example.accessibility.accelerate.IAccessibilityCallback;
 import com.example.accessibility.automatic.install.AutoInstallHandler;
+import com.example.accessibility.automatic.uninstall.AutoUninstallHandler;
 
 import java.util.List;
 
@@ -25,9 +28,59 @@ public class AccessibilityService extends IAccessibility.Stub {
     private static final String TAG = "AccessibilityService";
 
     private Context mContext;
+    private MyAccessibilityServiceStateListener mAccessibilityServiceStateListener;
+
+    private class MyAccessibilityServiceStateListener implements AccessibilityServiceManager.IAccessibilityServiceStateListener {
+
+        private IAccessibilityCallback mCallback;
+
+        public void setCallback(IAccessibilityCallback callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public void onServiceConnected() {
+            if (mCallback != null && mCallback.asBinder().isBinderAlive()) {
+                try {
+                    mCallback.onStart();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                mCallback = null;
+            }
+        }
+
+        @Override
+        public void onServiceDisConnected() {
+            if (mCallback != null && mCallback.asBinder().isBinderAlive()) {
+                try {
+                    mCallback.onStop();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                mCallback = null;
+            }
+        }
+    }
 
     public AccessibilityService(Context context) {
         this.mContext = context.getApplicationContext();
+        this.mAccessibilityServiceStateListener = new MyAccessibilityServiceStateListener();
+    }
+
+    @Override
+    public void open(IAccessibilityCallback callback) throws RemoteException {
+        AccessibilityServiceManager manager = AccessibilityServiceManager.getInstance();
+        manager.setStateListener(mAccessibilityServiceStateListener);
+        mAccessibilityServiceStateListener.setCallback(callback);
+
+        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
     }
 
     @Override
@@ -60,6 +113,9 @@ public class AccessibilityService extends IAccessibility.Stub {
                 break;
             case AccessibilityHelper.TYPE_AUTO_INSTALL:
                 handler = new AutoInstallHandler(listener);
+                break;
+            case AccessibilityHelper.TYPE_AUTO_UNINSTALL:
+                handler = new AutoUninstallHandler(listener);
                 break;
             default:
                 if (DEBUG) {

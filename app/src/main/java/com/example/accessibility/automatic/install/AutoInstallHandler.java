@@ -25,11 +25,9 @@ public class AutoInstallHandler extends BaseEventHandler {
 
     @Override
     public List<BaseEventRule> getRules() {
-        InstallRule installRule = new InstallRule();
-        InstallOkRule installOkRule = new InstallOkRule();
         ArrayList<BaseEventRule> rules = new ArrayList<>(2);
-        rules.add(installRule);
-        rules.add(installOkRule);
+        rules.add(new InstallRule());
+        rules.add(new InstallOkRule());
         return rules;
     }
 
@@ -44,6 +42,7 @@ public class AutoInstallHandler extends BaseEventHandler {
     @Nullable
     @Override
     public Intent getTargetIntent(String target) {
+        // TODO 判断intent是否可用
         Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE, Uri.fromFile(new File(target)));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;

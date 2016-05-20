@@ -26,11 +26,9 @@ public class AccHandler extends BaseEventHandler {
 
     @Override
     public List<BaseEventRule> getRules() {
-        ForcestopRule forcestopRule = new ForcestopRule();
-        ForcestopOkRule forcestopOkRule = new ForcestopOkRule();
         ArrayList<BaseEventRule> rules = new ArrayList<>(2);
-        rules.add(forcestopRule);
-        rules.add(forcestopOkRule);
+        rules.add(new ForcestopRule());
+        rules.add(new ForcestopOkRule());
         return rules;
     }
 
@@ -45,6 +43,7 @@ public class AccHandler extends BaseEventHandler {
     @Nullable
     @Override
     public Intent getTargetIntent(String target) {
+        // TODO 判断intent是否可用
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         intent.setData(Uri.fromParts("package", target, null));
         return intent;

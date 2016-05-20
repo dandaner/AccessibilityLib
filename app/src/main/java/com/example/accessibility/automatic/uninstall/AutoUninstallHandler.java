@@ -2,6 +2,7 @@ package com.example.accessibility.automatic.uninstall;
 
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -17,20 +18,23 @@ import java.util.List;
  * time: 16/4/28 下午3:10
  */
 public class AutoUninstallHandler extends BaseEventHandler {
+
     public AutoUninstallHandler(IEventHandlerStateListener listener) {
         super(listener);
     }
 
     @Override
     public List<BaseEventRule> getRules() {
-        ArrayList<BaseEventRule> rules = new ArrayList<>();
+        ArrayList<BaseEventRule> rules = new ArrayList<>(2);
+        rules.add(new UninstallRule());
+        rules.add(new UninstallOkRule());
         return rules;
     }
 
     @Override
     public AccessibilityServiceInfo getTarget() {
         AccessibilityServiceInfo target = new AccessibilityServiceInfo();
-        target.packageNames = new String[]{"com.android.settings"};
+        target.packageNames = new String[]{"com.android.packageinstaller"};
         target.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
         return target;
     }
@@ -38,6 +42,9 @@ public class AutoUninstallHandler extends BaseEventHandler {
     @Nullable
     @Override
     public Intent getTargetIntent(String target) {
-        return null;
+        // TODO 判断intent是否可用
+        Intent intent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, Uri.parse("package:" + target));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
     }
 }
