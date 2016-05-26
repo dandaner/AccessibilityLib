@@ -1,6 +1,8 @@
 package com.example.accessibility;
 
 import android.animation.ObjectAnimator;
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -11,7 +13,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,8 +29,9 @@ import com.example.accessibility.base.AccessibilityHelper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends Activity implements View.OnClickListener {
 
     private static final boolean DEBUG = com.demon.lib.BuildConfig.LOG_ENABLE;
     private static final String TAG = "MainActivity";
@@ -173,9 +176,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         LinkedList<String> pkgNames = new LinkedList<>();
         // need to check intent avaiable
-//        pkgNames.add("fm.qingting.qtradio");
-        pkgNames.add("*******");
-//        pkgNames.add("yinyu.toutiiao");
+        pkgNames.add("fm.qingting.qtradio");
+//        pkgNames.add("*******");
+        pkgNames.add("yinyu.toutiiao");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_AUTO_UNINSTALL, pkgNames, null);
     }
 
@@ -184,11 +187,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "吊炸天服务尚未开启，请点击打开辅助功能按钮！！", Toast.LENGTH_SHORT).show();
             return;
         }
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
+
         LinkedList<String> pkgNames = new LinkedList<>();
-        // need to check intent avaiable
-//        pkgNames.add("com.achievo.vipshop");
-        pkgNames.add("**************");
-//        pkgNames.add("cn.j.hers");
+        String pkName;
+        for (ActivityManager.RunningAppProcessInfo info : runningAppProcesses) {
+            if (info.uid < 10000) {
+                continue;
+            }
+            pkName = getPackageName(info);
+            if (!TextUtils.isEmpty(pkName) && !pkName.equals(this.getPackageName())
+                    && !pkgNames.contains(pkName)) {
+                pkgNames.add(pkName);
+            }
+        }
+//        pkgNames.add("**********");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_ACC, pkgNames, new MyAccessibilityCallback());
     }
 
@@ -198,10 +212,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
         ArrayList<String> paths = new ArrayList<>();
-//        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-fm.qingting.qtradio.apk");
-        paths.add("**************");
-//        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-yinyu.toutiiao.apk");
-//        paths.add("/sdcard/AndroidOptimizer/apkdownloader/predl-com.baidu.browser.apps.pak");
+        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-fm.qingting.qtradio.apk");
+//        paths.add("**************");
+        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-yinyu.toutiiao.apk");
+        paths.add("/sdcard/AndroidOptimizer/apkdownloader/predl-com.baidu.browser.apps.pak");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_AUTO_INSTALL,
                 paths, new MyAccessibilityCallback());
     }
@@ -311,5 +325,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             mHandler.sendMessage(mHandler.obtainMessage(MSG_STOP));
         }
+    }
+
+    public String getPackageName(ActivityManager.RunningAppProcessInfo amProcess) {
+        if (amProcess.pkgList == null || amProcess.pkgList.length == 0) {
+            return amProcess.processName;
+        }
+        for (String s : amProcess.pkgList) {
+            if (s.equals(amProcess.processName)) {
+                return s;
+            }
+        }
+        return null;
     }
 }
