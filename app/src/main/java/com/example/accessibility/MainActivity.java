@@ -2,12 +2,15 @@ package com.example.accessibility;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.PixelFormat;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,6 +24,7 @@ import com.demon.lib.utils.LogHelper;
 import com.example.accessibility.base.AccessibilityCallback;
 import com.example.accessibility.base.AccessibilityHelper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -83,6 +87,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.stop).setOnClickListener(this);
         findViewById(R.id.auto_install).setOnClickListener(this);
         findViewById(R.id.auto_uninstall).setOnClickListener(this);
+        findViewById(R.id.acc_test).setOnClickListener(this);
+        findViewById(R.id.install_test).setOnClickListener(this);
+        findViewById(R.id.uninstall_test).setOnClickListener(this);
     }
 
     @Override
@@ -95,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startAcc();
                 break;
             case R.id.stop:
+                AccessibilityHelper.stop(this);
                 break;
             case R.id.auto_install:
                 autoInstall();
@@ -102,9 +110,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.auto_uninstall:
                 autoUninstall();
                 break;
+            case R.id.acc_test:
+                testAcc();
+                break;
+            case R.id.install_test:
+                testInstall();
+                break;
+            case R.id.uninstall_test:
+                testUninstall();
+                break;
             default:
                 break;
         }
+    }
+
+    private void testAcc() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.fromParts("package", "xxxxxxx", null));
+        startActivity(intent);
+    }
+
+    private void testInstall() {
+        Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE, Uri.fromFile(new File("xxxxx")));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    private void testUninstall() {
+        Intent intent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, Uri.parse("package:" + "xxxx"));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     private void open() {
@@ -138,9 +173,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         LinkedList<String> pkgNames = new LinkedList<>();
         // need to check intent avaiable
-//        pkgNames.add("com.qihoo360.mobilesafe");
-        pkgNames.add("fm.qingting.qtradio");
-        pkgNames.add("yinyu.toutiiao");
+//        pkgNames.add("fm.qingting.qtradio");
+        pkgNames.add("*******");
+//        pkgNames.add("yinyu.toutiiao");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_AUTO_UNINSTALL, pkgNames, null);
     }
 
@@ -151,9 +186,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         LinkedList<String> pkgNames = new LinkedList<>();
         // need to check intent avaiable
-//        pkgNames.add("com.qihoo360.mobilesafe");
-        pkgNames.add("com.achievo.vipshop");
-        pkgNames.add("cn.j.hers");
+//        pkgNames.add("com.achievo.vipshop");
+        pkgNames.add("**************");
+//        pkgNames.add("cn.j.hers");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_ACC, pkgNames, new MyAccessibilityCallback());
     }
 
@@ -163,9 +198,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
         ArrayList<String> paths = new ArrayList<>();
-        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-fm.qingting.qtradio.apk");
-        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-yinyu.toutiiao.apk");
-        paths.add("/sdcard/AndroidOptimizer/apkdownloader/predl-com.baidu.browser.apps.pak");
+//        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-fm.qingting.qtradio.apk");
+        paths.add("**************");
+//        paths.add("/sdcard/AndroidOptimizer/apkdownloader/appssearch-yinyu.toutiiao.apk");
+//        paths.add("/sdcard/AndroidOptimizer/apkdownloader/predl-com.baidu.browser.apps.pak");
         AccessibilityHelper.start(this, AccessibilityHelper.TYPE_AUTO_INSTALL,
                 paths, new MyAccessibilityCallback());
     }

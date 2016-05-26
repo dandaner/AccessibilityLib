@@ -41,4 +41,22 @@
         android:layout_height="wrap_content"
         android:text="自动卸载" />
 
+    <Button
+        android:id="@+id/acc_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="加速容错检测" />
+
+    <Button
+        android:id="@+id/install_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="安装容错检测" />
+
+    <Button
+        android:id="@+id/uninstall_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="卸载容错检测" />
+
 </LinearLayout>

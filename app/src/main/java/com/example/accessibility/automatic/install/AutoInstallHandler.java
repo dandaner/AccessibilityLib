@@ -42,7 +42,6 @@ public class AutoInstallHandler extends BaseEventHandler {
     @Nullable
     @Override
     public Intent getTargetIntent(String target) {
-        // TODO 判断intent是否可用
         Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE, Uri.fromFile(new File(target)));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;

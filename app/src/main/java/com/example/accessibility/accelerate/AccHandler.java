@@ -43,7 +43,6 @@ public class AccHandler extends BaseEventHandler {
     @Nullable
     @Override
     public Intent getTargetIntent(String target) {
-        // TODO 判断intent是否可用
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         intent.setData(Uri.fromParts("package", target, null));
         return intent;

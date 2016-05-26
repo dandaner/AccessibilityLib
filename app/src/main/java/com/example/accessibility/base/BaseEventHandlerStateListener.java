@@ -2,11 +2,14 @@ package com.example.accessibility.base;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
 import com.demon.lib.base.AccessibilityServiceManager;
 import com.demon.lib.base.BaseEventHandler;
+import com.demon.lib.utils.LogHelper;
 import com.example.accessibility.accelerate.IAccessibilityCallback;
 
 import java.util.List;
@@ -16,6 +19,9 @@ import java.util.List;
  * time: 16/5/19 下午4:26
  */
 public class BaseEventHandlerStateListener implements BaseEventHandler.IEventHandlerStateListener {
+
+    private static final boolean DEBUG = com.demon.lib.BuildConfig.LOG_ENABLE;
+    private static final String TAG = "BaseEventHandlerStateListener";
 
     protected Context mContext;
     private List<String> mTargets;
@@ -85,11 +91,35 @@ public class BaseEventHandlerStateListener implements BaseEventHandler.IEventHan
                     e.printStackTrace();
                 }
             }
-            // 所有的界面启动都是通过TransparentActivity来启动，方便我们统一处理销毁界面
-            Intent intent = new Intent(mContext, TransparentActivity.class);
-            intent.putExtra(TransparentActivity.EXTRA_TARGET_INTENT, handler.getTargetIntent(mCurTarget));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            mContext.startActivity(intent);
+            Intent targetIntent = handler.getTargetIntent(mCurTarget);
+            if (targetIntent != null && isActivityAvailable(targetIntent)) {
+                // 所有的界面启动都是通过TransparentActivity来启动，方便我们统一处理销毁界面
+                Intent intent = new Intent(mContext, TransparentActivity.class);
+                intent.putExtra(TransparentActivity.EXTRA_TARGET_INTENT, targetIntent);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent);
+            } else {
+                if (DEBUG) {
+                    LogHelper.d(TAG, "*** Error *** : " + mCurTarget + " not Available, skip it!");
+                }
+                if (mCallback != null && mCallback.asBinder().isBinderAlive()) {
+                    try {
+                        mCallback.after(mCurTarget);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+                startTarget(handler);
+            }
+        } else {
+            // 极端情况，所有传入的参数都是非法的，导致当前handler阻塞
+            AccessibilityServiceManager.getInstance().stop();
         }
+    }
+
+    private boolean isActivityAvailable(Intent intent) {
+        List<ResolveInfo> list = mContext.getPackageManager().queryIntentActivities(
+                intent, PackageManager.MATCH_DEFAULT_ONLY);
+        return list != null && list.size() > 0;
     }
 }

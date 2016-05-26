@@ -42,7 +42,6 @@ public class AutoUninstallHandler extends BaseEventHandler {
     @Nullable
     @Override
     public Intent getTargetIntent(String target) {
-        // TODO 判断intent是否可用
         Intent intent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, Uri.parse("package:" + target));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;
